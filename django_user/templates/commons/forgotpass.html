@@ -1,0 +1,307 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Password Reset{% endblock title %}
+{% block forgot %}  {% endblock %}
+{% block default %}{% endblock %}
+{% block content %} 
+{% if request.user.is_authenticated %}
+<h1> You have already logged in</h1>
+  {% else %}
+<script type="text/javascript" src="{% static 'jquery.js' %}"></script>
+<script>
+    function send()
+        {
+            document.getElementById("otpresult").innerHTML = "Sending OTP... ";
+            var mail = document.getElementById("email").value;
+            
+            // Request Object
+            var request = new XMLHttpRequest();
+            //alert(req.readyState);
+
+            var url = "forgotsendotp?email="+mail;
+
+            // Object Initialize
+            request.open("GET",url);
+
+            //alert(req.readyState);
+
+            request.onreadystatechange = function()
+            {
+                if(request.readyState==4)
+                {
+                  var strrec=request.responseText;
+                  var mes = strrec.slice(0,23);
+                  document.getElementById("otpresult").innerHTML=mes;
+                  var recotp=strrec.slice(23,-1);
+                  document.getElementById("otprec").value =recotp;
+                }
+            }
+            request.send();
+        }    
+  </script>
+
+  <script type="text/javascript">
+    function validatePassword(password) {
+                
+                // Do not show anything when the length of password is zero.
+                if (password.length === 0) {
+                    document.getElementById("msg").innerHTML = "";
+                    return;
+                }
+                // Create an array and push all possible values that you want in password
+                var matchedCase = new Array();
+                matchedCase.push("[$@$!%*#?&]"); // Special Charector
+                matchedCase.push("[A-Z]");      // Uppercase Alpabates
+                matchedCase.push("[0-9]");      // Numbers
+                matchedCase.push("[a-z]");     // Lowercase Alphabates
+
+                // Check the conditions
+                var ctr = 0;
+                for (var i = 0; i < matchedCase.length; i++) {
+                    if (new RegExp(matchedCase[i]).test(password)) {
+                        ctr++;
+                    }
+                }
+                // Display it
+                var color = "";
+                var strength = "";
+                switch (ctr) {
+                    case 0:
+                    case 1:
+                    case 2:
+                        strength = "Very Weak Password";
+                        color = "red";
+                        break;
+                    case 3:
+                        strength = "Medium Password";
+                        color = "orange";
+                        break;
+                    case 4:
+                        strength = "Strong Password";
+                        color = "green";
+                        break;
+                }
+                document.getElementById("msg").innerHTML = strength;
+                document.getElementById("msg").style.color = color;
+            }
+
+  </script>
+
+<script type="text/javascript">
+    $(document).ready(function(){
+     $("#otpbtn").click(function(){
+      $("#email").hide();
+      //$("#emailshow").show();
+     });
+    });
+  </script>
+
+<script>
+function displayInput() {
+  var userInput = document.getElementById("email").value;
+  document.getElementById("output").innerHTML = userInput;
+}
+</script>
+
+
+
+<script type="text/javascript">
+ function validation() 
+  { 
+    var emailid1=document.f1.emailid1.value;
+    var validmail=emailid1.endsWith("@gmail.com")
+    var password1=document.f1.password1.value;
+    var password=document.f1.password.value; 
+    var otp=document.f1.otp.value;
+    var otpcheck = document.getElementById('otprec').value;
+    var str1 = document.getElementById('txtCaptcha').value;  
+    var str2 = document.getElementById('txtCompare').value;
+ 
+
+      if(emailid1=="")
+    {
+      alert("Please enter Email-ID");
+      document.f1.emailid1.focus();
+      return false;
+    }
+  
+  if(validmail!=true)
+
+    {
+      alert("Please enter Valid Email-ID");
+      document.f1.emailid1.focus();
+      return false;
+    }
+
+
+  
+    if (password1=="")
+    {
+      alert("Please enter Password");
+      document.f1.password1.focus();
+      return false;
+    }
+
+    if(password1.length<=7)
+     {
+      alert("Password can not be leass than 8 charactor");
+      document.f1.password1.focus();
+       return false;
+     }
+     
+    if (password=="")
+    {
+      alert("Please Re-enter Password");
+      document.f1.password.focus();
+      return false;
+    }
+
+    if(password1!=password)
+    {
+      alert("Password does not match");
+      document.f1.password1.value="";
+      document.f1.password.value="";
+      document.f1.password1.focus();
+      return false;
+    }  
+  
+      if (otp=="")
+     {
+    alert("Please enter OTP");
+    document.f1.otp.focus();
+    return false;
+     }
+     if(otp!=otpcheck)
+     {
+      alert("Wrong OTP");
+      document.f1.otp.focus();
+      return false;
+    }
+     
+      if (str2=="")
+     {
+      alert("Please enter Captcha Code");
+      document.getElementById('txtCompare').focus();
+       return false;
+    }
+
+  if (str2!=str1)
+     {
+      alert("Captcha Code do not match");
+      document.getElementById('txtCompare').value="" 
+      document.getElementById('txtCompare').focus();
+    return false;
+  }
+
+   }
+</script>
+
+<script type="text/javascript">
+function Generate() {  
+            var chr1 = Math.ceil(Math.random() * 10) + '';  
+            var str = new Array(4).join().replace(/(.|$)/g, function () { return ((Math.random() * 36) | 0).toString(36)[Math.random() < .5 ? "toString" : "toUpperCase"](); });  
+            var captchaCode = str + chr1;
+            document.getElementById("txtCaptcha").value = captchaCode  
+        } 
+    </script>  
+<script type="text/javascript">
+   document.addEventListener('DOMContentLoaded', function() {
+        const refreshBtn = document.getElementById('refreshButton');
+
+        function handleClick() {
+            window.location.reload();
+        }
+
+        refreshBtn.addEventListener('click', handleClick);
+    });
+
+</script>
+
+
+
+<body onload="Generate();">
+<div class="container bg-white rounded rounded-5" style="width:400px;">
+  <a onclick="history.back()" style="border: none ;width: 1px"><img src="{% static 'img/animated-icon-backward_2.gif' %}" height="45px"></a>
+  <a href="/" style="font-size:35px;"><i class="fa fa-home faicon " style="color:green;" aria-hidden="true"></i></a>
+  <a href="" id="refreshButton"><i class="fa fa-spinner faa-spin faa-reverse animated" style="font-size: 2em;color: red; margin-left: 20%;"></i></a>
+ <form name="f1" action="resetpass" method="POST" enctype="multipart/form-data" onsubmit="return validation();" class="mx-1 mx-md-4">
+  {% csrf_token %}
+  <!-- Email input -->
+  <div data-mdb-input-init class="form-outline form-group">
+       <span id="output" style="color: brown;"></span>
+      <input type="email" placeholder="Enter Email Id" name="emailid1" id="email" oninput="displayInput()" class="form-control">
+  </div>
+
+  <!-- Password input 1 -->
+   <div data-mdb-input-init class="form-outline  form-group ">
+     
+      <input type="password" name="password1" id="pwd" placeholder="Enter Password" onkeyup="validatePassword(this.value);" class="form-control">
+       </div>
+
+  <!-- Password input2 -->
+   <div data-mdb-input-init class="form-outline form-group ">
+     
+      <input type="password" placeholder="Confirm Password" name="password" class="form-control">
+      <spna class="form-label" for="form3Example1c" id="msg"></span>
+       </div>
+
+  <!-- Gemerate otp and enter -->
+   <div data-mdb-input-init class="form-outline form-group p-0 m-0">
+    <p style="color:red;" class="form-label" for="form3Example1c" id="otpresult"></p>
+    <table>
+      <tr>
+        <td> <button  class="btn btn-outline-danger rounded rounded-4 m-0 p-0" onclick="send(); displayInput();" style=" font-size:15px;" type="button" id="otpbtn" readonly="readonly" onclick="blockemail();">Generate OTP</button></td>
+            <td><input type="text" name="otp" placeholder="Enter OTP" maxlength="6" style="width:120px; float: right; text-align: center;" class="form-control"></td>
+      </tr>
+    <tr>
+      <td>
+         <a href="#"><input type="text" id="txtCaptcha" style="width:60%; font-size: 30px; font-weight:bolder; background-color: black; color:white;" class="form-control unselectable" readonly="readonly"></a>
+      </td>
+      <td>
+        <input type="text" id="txtCompare" class="form-control unselectable" placeholder="Enter CAPTCHA" maxlength="6" style="width: 120px; text-align: center; margin-bottom: 10px;" class="form-control">
+      </td>
+    </tr>
+
+  <!-- Submit button -->
+      <tr>
+        <td><imput type="buton" class="btn btn-outline-danger rounded rounded-4" id="btn" onclick="Generate();">Refresh</td>
+        <td style="align-items: right;">
+          <input type="submit" value="Submit" class="btn btn-primary btn-block"></td>
+      </tr>
+    </table>
+</div>
+<input type="text" id="otprec" value="12356" class="display-block" readonly="readonly" style="color:white; width: 1px; border: 0px solid white;">
+</form>
+  <!-- Register buttons -->
+  <div class="text-center">
+  I have a password <a href="{% url 'login' %}" style="color:red;">Login</a>
+  <p style="color:red"> {{msg}} </p>
+  
+</div>
+</div>
+
+<script>
+  const myInput = document.getElementById('txtCompare');
+
+  // Disable paste
+  myInput.addEventListener('paste', function(e) {
+    e.preventDefault();
+    alert('Pasting is disabled in this field.');
+  });
+
+  // Disable copy
+  myInput.addEventListener('copy', function(e) {
+    e.preventDefault();
+    alert('Copying is disabled in this field.');
+  });
+
+  // Disable cut (optional)
+  myInput.addEventListener('cut', function(e) {
+    e.preventDefault();
+    alert('Cutting is disabled in this field.');
+  });
+</script>
+
+{% endif %}
+{% endblock content %}
+{% block mainbody %} {% endblock %}

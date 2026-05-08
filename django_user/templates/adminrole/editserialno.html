@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Edit Serial No.{% endblock title %}
+{% block forgot %}  {% endblock %}
+{% block content %} 
+{% if request.user.is_authenticated %}
+{% if user.role == "Admin" %}
+<style>
+#showmarks {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
+  border: 3px solid green;
+}
+
+.td1 {
+  text-align: center;
+  padding: 1px;
+  border: 1px solid red;"
+}
+
+input
+{
+  text-align: center; border:none;
+  background-color: transparent;
+}
+
+</style>
+ <button class="btn btn-outline-danger m-3" onclick="history.back()">Go Back</button>
+<div class="container-fluid">
+<div style="overflow-x:auto;">
+<table id="showmarks" class="table-bordered container-fluid" align="center">
+       <tr id="td1" border="1px" align="center" style="background-color:black; color:white;">
+                      <th class="td1">Serial No</th>
+                      <th class="td1">Letter Head Person Name</th>
+                      <th class="td1">Issue To</th>
+                      <th class="td1">Subject</th>
+                      <th class="td1">Date</th>
+                      <th class="td1">Action</th>
+                    </tr>
+                    {% for i in serialdata %}
+                      <tr id="td1" border="2" align="center">
+                        <form action="editserialno" method="POST">
+                          {% csrf_token %}
+                          <input type="hidden" name="serialno" value="{{i.code}}">
+                        <td><input type="text" disabled name="serialno" value="{{i.code}}"></td>
+                        <td><input type="text" name="issuername" value="{{i.issuername}}"></td>
+                        <td><input type="text" name="issuedto" value="{{i.issuedto}}"></td>
+                        <td><input type="text" name="subject" value="{{i.subject}}"></td>
+                        <td><input type="date" name="issuedate" value="{{i.issuedate|date:'Y-m-d'}}"></td>
+                        <td rowspan="2" id="td1" align="center"><button class="btn btn-success btn-outline-warning">Update</button></td>
+                      </tr>
+                       </form>
+                    {% endfor %}  
+                    </table>    
+                        </div> 
+                      </div>
+                        {% else %}
+<h1> You Do Not Have permission to access this page</h1>
+{% endif %}
+ {% else %}
+ <h1> You are not logged in</h1>
+    {% endif %}          
+               {% endblock %}
+               {% block mainbody %} {% endblock %}

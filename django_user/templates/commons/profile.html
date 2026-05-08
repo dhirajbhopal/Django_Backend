@@ -1,0 +1,35 @@
+
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Profile{% endblock title %}
+{% block content %} 
+
+ {% if user.is_authenticated %}
+      <br>
+            
+<div class="container">
+<div class="d-flex" align="left">
+        <div class="p-2 w-50">
+          <div class="card" style="width: 40rem; border-radius: 30px; padding: 10px;">
+                <form action="{% url 'profileupdate' user.id %}" method="POST">
+                 {% csrf_token %}
+                <span style="font-size:20px; margin: 5%; color:green; font-weight:bolder;">Update Profile</span><br><br>
+                <label class="form-label" for="form3Example1c" style="color:green; text-align: left;">First Name</label> <label class="form-label" for="form3Example1c" style="color:red;">*</label>
+                {{form.first_name}}  &#160 {{user.first_name}}<br>
+                <label class="form-label" for="form3Example1c" style="color:green; text-align: left;">Last Name</label> <label class="form-label" for="form3Example1c" style="color:red;">*</label>
+                 {{form.last_name}} &#160 {{user.last_name}}<br>
+                <label class="form-label" for="form3Example1c"style="color:green; text-align: left;">Email Id</label><label class="form-label" for="form3Example1c" style="color:red;">*&#160 &#160 &#160 &#160</label><input style="width:200px" id="myInput" type="email" disabled value="{{user.email}}">
+                 <br>
+                  <button class="btn btn-outline-danger m-2">Update Now</button>
+                </form>
+          </div>
+  <div class=" p-2 flex-shrink-1">
+  
+  </div>
+</div>
+</div>
+
+
+ {% endif %}
+{% endblock content %}
+{% block mainbody %} {% endblock %}

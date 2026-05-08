@@ -1,0 +1,17 @@
+MySQL Setup Instructions
+
+1. Install required packages:
+   pip install -r requirements_mysql.txt
+
+2. Create a MySQL database.
+
+3. Open django_user/settings.py and update:
+   - NAME
+   - USER
+   - PASSWORD
+
+4. Run migrations:
+   python manage.py migrate
+
+5. Start server:
+   python manage.py runserver

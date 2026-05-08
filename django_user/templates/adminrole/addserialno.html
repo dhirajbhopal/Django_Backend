@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Add Serial No{% endblock title %}
+{% block forgot %}  {% endblock %}
+{% block content %} 
+{% if request.user.is_authenticated %}
+{% if user.role == "Admin" %}
+<script type="text/javascript" src="{% static 'jquery.js' %}"></script>
+  <form action='searchserialno' method="POST" name="f1" onsubmit="return validation();">
+      {% csrf_token %}
+  <span style="margin:20px;"> Serial No </span> <input type="text" name="serialno" style="margin:10px;">
+<button  class="btn btn-info btn-outline-danger" style="color:black; font-size:15px;">Search</button>
+<a href="searchserialnoall"class="btn btn-outline-danger m-3"  style="color:black; font-size:15px;">View All</a>
+</form>
+<form action="generate_unique_code" method="POST">
+  {% csrf_token %}
+  <button class="btn btn-outline-danger" id="dflex" style="color:black; font-size:15px;">Generate Serial Number</button>
+</form>
+ <br>
+
+
+<script type="text/javascript">
+  $(document).ready(function(){
+     $("#dflex").click(function(){
+     var proceed = confirm("Do you want to Generate Serial No");
+
+    if (proceed) 
+    {     return true;
+   } 
+   
+   else 
+   {
+    return false
+    }
+    });
+   });
+  </script>
+
+<style>
+.showmarks {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
+  border: 3px solid green;
+}
+
+.td1 {
+  text-align: center;
+  padding: 1px;
+  border: 1px solid red;"
+}
+
+#dwnldBtn{
+            background-color: green; 
+            color: #fff; 
+            padding: 10px; 
+            border: none;
+            border-radius: 5px; 
+            margin: 2rem 0;
+            cursor: pointer;
+        }
+
+</style>
+{% for i in serialdata %}
+<table class="showmarks" id="myTable" class="table-bordered container-fluid" align="center">
+      <tr class="td1" border="1px" align="center" style="background-color:black; color:white;"> 
+                      <th>Serial No</th>
+                      <th>Letter Head Person Name</th>
+                      <th>Issue To</th>
+                      <th>Subject</th>
+                      <th>Date</th>
+                      <th>Update</th>
+                    </tr>
+                      <tr class="td1" border="2" align="center">
+                      <td>{{i.code}}</td>
+                      <td>{{i.issuername}}</td>  
+                       <td>{{i.issuedto}}</td>
+                        <td>{{i.subject}}</td>
+                        <td>{{i.issuedate}}</td>
+                      <td> <form action="editserialno" method="GET">
+                          {% csrf_token %}
+                          <input type="hidden" name="serialno" value="{{i.serialno}}">
+                    <button class="btn btn-success btn-outline-warning ">Edit</button>
+                   </form></td>
+                      </tr>
+                     {% endfor %}
+                    </table> 
+
+<script type="text/javascript">
+function validation() 
+  { 
+    var serialno=document.f1.serialno.value;
+
+    if(serialno=="")
+      {
+      alert("Please Enter serial No");
+      return false;
+    }
+
+}
+  </script>
+
+{% block sms %} {% endblock %}
+  {% if messages %}
+    {% for message in messages %}
+        <span style="color: red; margin-left: 20px;"><i class="fa fa-exclamation-triangle" aria-hidden="true" style='font-size:30px;color:red;margin-top: 10px;"'></i>{{message}}</span>
+    {% endfor %}
+{% endif %}
+
+                  
+{% else %}
+<h1> You Do Not Have permission to access this page</h1>
+{% endif %}
+ {% else %}
+ <h1> You are not logged in</h1>
+    {% endif %} 
+               {% endblock %}
+               {% block mainbody %} {% endblock %}

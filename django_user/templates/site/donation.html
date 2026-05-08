@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %} 
+{% block title %} Donation {% endblock %}
+
+{% block donation %}
+
+<script type="text/javascript">
+
+ function validation() 
+  { 
+    var amount=document.f1.amount.value;
+
+  if (amount=="")
+  {
+    alert("Please enter Amount");
+    document.f1.amount.focus();
+    return false;
+  }
+
+  if (amount <= "0.9")
+  {
+    alert("Please Enter Amount more than Rs 1");
+    document.f1.amount.focus();
+    return false;
+  }
+
+  if(isNaN(amount))
+    {
+      alert("Enter Numeric value");
+      document.f1.amount.value="";
+      document.f1.amount.focus();
+      return false
+    }
+}
+</script>
+
+
+<style type="text/css">
+
+	select{
+		border:solid red 2px;
+		margin: 5px;
+		border-radius: 10px;
+	}
+</style>
+
+<body>
+	<br>
+	<div class="container">
+	<form name="f1" action="/donationdetail" method="POST" onsubmit="return validation();"> 
+		{% csrf_token %}
+		<table id="generatePdf" align="center" style=" border: 5px solid black;" class="rounded rounded-5">
+			<tr>
+			<td colspan="3" style="color:green; padding: 10px; font-size: 30px;font-weight: bolder;">Please Enter Amount </td>
+
+	</tr>
+	<tr>
+			<td style="padding-left: 10px;font-size: 20px;font-weight: bolder">Amount in Rs. &#160</td>
+		<td><input type="text" value="10000" min="1" name="amount" style="border:solid red 2px; font-size: 20px; border-radius: 10px; width:70%"></td>
+	</tr>
+	<tr>
+		<td colspan="3" align="center" style="padding-left: 10px;font-size: 20px;font-weight: bolder;"><input class="btn btn-outline-danger rounded-4" style="margin: 10px;" type="submit" value="Pay Now"></td>
+	</tr>
+	</table>
+</form>
+</div>
+{% endblock %}
+ {% block mainbody %} {% endblock %}

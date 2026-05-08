@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Donation Detail {% endblock %}
+{% block forgot %}  {% endblock %}
+{% block mainbody %}{% endblock %}
+{% block content %} 
+{% if request.user.is_authenticated %}
+
+<style>
+.showmarks {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
+  border: 3px solid green;
+}
+
+.td1 {
+  text-align: center;
+  padding: 1px;
+  border: 1px solid red;"
+}
+
+#dwnldBtn{
+            background-color: green; 
+            color: #fff; 
+            padding: 10px; 
+            border: none;
+            border-radius: 5px; 
+            margin: 2rem 0;
+            cursor: pointer;
+        }
+
+</style>
+<div class="container">
+	<br>
+<input type="text" id="myInputroll" onkeyup="myFunctionroll()" placeholder="Name...." title="Type in a name">
+<table class="showmarks" id="myTable" class="table-bordered container-fluid" align="center">
+	<br><br>
+      <tr class="td1" border="1px" align="center" style="background-color:black; color:white;">
+                      <th>Name</th>
+                      <th>Address</th>
+                      <th>Amount</th>
+                    </tr>
+                      {% for i in donationdetails %}
+                      <tr class="td1" border="2" align="center">  
+                        <td>{{i.name}} {{i.lastname}}</td>
+                        <td> {{i.address}}</td>
+                        <td> {{i.Amount}}</td>
+                      </tr>
+                     {% endfor %}
+                      <td colspan="2" style="color:red; font-size:30px;">Total Amount</td>
+                      <td style="color:red; font-size:30px; font-weight: bolder;"> {{total_amount}}</td>
+                    </table>  
+                    <button id="dwnldBtn">Download Excel Sheet</button>
+                    </div> 
+<style>
+* {
+  box-sizing: border-box;
+}
+
+#myInputroll {
+  background-image: url("{% static 'images/searchicon.png' %}");
+  background-position: 10px 10px;
+  background-repeat: no-repeat;
+  width: 40%;
+  font-size: 16px;
+  padding: 12px 20px 12px 40px;
+  border: 1px solid #ddd;
+  margin-bottom: 12px;
+  margin-left: 20px;
+  border-radius: 10px;
+}
+
+
+#myTable {
+  border-collapse: collapse;
+  width: 100%;
+  border: 1px solid red;
+  font-size: 15px;
+}
+
+#myTable th, #myTable td {
+  text-align: center;
+  padding: 5px;
+  border: 1px solid red;
+}
+
+#myTable tr {
+  border: 1px solid red;
+}
+
+#myTable tr.header, #myTable tr:hover {
+  background-color:green;
+}
+</style>
+
+
+<script>
+function myFunctionroll() {
+  var input, filter, table, tr, td, i, txtValue;
+  input = document.getElementById("myInputroll");
+  filter = input.value.toUpperCase();
+  table = document.getElementById("myTable");
+  tr = table.getElementsByTagName("tr");
+  for (i = 0; i < tr.length; i++) {
+    td = tr[i].getElementsByTagName("td")[0];
+    if (td) {
+      txtValue = td.textContent || td.innerText;
+      if (txtValue.toUpperCase().indexOf(filter) > -1) {
+        tr[i].style.display = "";
+      } else {
+        tr[i].style.display = "none";
+      }
+    }       
+  }
+}
+</script>
+
+<script>
+function myFunctionmonth() {
+  var input, filter, table, tr, td, i, txtValue;
+  input = document.getElementById("myInputmonth");
+  filter = input.value.toUpperCase();
+  table = document.getElementById("myTable");
+  tr = table.getElementsByTagName("tr");
+  for (i = 0; i < tr.length; i++) {
+    td = tr[i].getElementsByTagName("td")[2];
+    if (td) {
+      txtValue = td.textContent || td.innerText;
+      if (txtValue.toUpperCase().indexOf(filter) > -1) {
+        tr[i].style.display = "";
+      } else {
+        tr[i].style.display = "none";
+      }
+    }       
+  }
+}
+</script>
+
+
+<script type="text/javascript">
+  $(document).ready(function () {
+            $('#dwnldBtn').on('click', function () {
+                $("#myTable").table2excel({
+                    filename: "Donation_Detail.xls"
+                });
+            });
+        });
+</script>
+{% endif %}
+{% endblock %}
+
+<h1> You Do Not Have permission to access this page</h1>
+ <h1> You are not logged in</h1>
+

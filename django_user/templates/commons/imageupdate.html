@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Update Image {% endblock title %}
+{% block content %}
+{% if user.is_authenticated %}
+
+<style>
+  .camera-preview-wrapper{
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .box-card{
+    flex: 1;
+    min-width: 250px;
+    max-width: 250px;
+    text-align: center;
+    align-items: center;
+  }
+
+  video {
+    width: 100%;
+    max-height: 250px;
+    border-radius: 12px;
+    background: #000;
+    object-fit: cover;
+  }
+
+  #preview {
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 2px solid #ddd;
+  }
+
+  .btn-group-custom {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+</style>
+
+<div class="container">
+
+  <h2 style= "color: green; font-weight: bolder; text-align: center;">Upload / Capture Image</h2>
+
+  <!-- ================= CAMERA + PREVIEW SIDE BY SIDE ================= -->
+  <div class="camera-preview-wrapper">
+
+    <!-- CAMERA -->
+    <div class="card p-3 box-card shadow-sm">
+
+      <h5>📷 Camera</h5>
+
+      <video id="video" autoplay></video>
+
+      <div class="btn-group-custom">
+        <button type="button" class="btn btn-primary btn-sm" id="startCam">Open Camera</button>
+        <button type="button" class="btn btn-success btn-sm" id="capture">Capture</button>
+      </div>
+
+    </div>
+
+    <!-- PREVIEW -->
+    <div class="card p-1 box-card shadow-sm">
+
+      <h5>🖼 Preview</h5>
+
+      <img id="preview" src="" alt="Preview" class="m-1">
+
+    </div>
+
+  </div>
+
+  <!-- ================= UPLOAD ================= -->
+  <div class="container card p-3 mt-3 shadow-sm text-center w-25">
+
+    <h5>📁 Upload Image</h5>
+
+    <input type="file" id="file-input" accept="image/*" class="form-control form-control-sm">
+
+  </div>
+
+  <!-- ================= FORM ================= -->
+  <form method="POST" action="imageupdate" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="hidden" name="email" value="{{user.email}}">
+    <input type="hidden" name="image_data" id="image_data">
+
+    <div class="text-center mt-3">
+      <button class="btn btn-success">Save Image</button>
+    </div>
+  </form>
+
+</div>
+
+{% else %}
+<h3 class="text-center">You are not logged in</h3>
+{% endif %}
+
+<script>
+
+let video = document.getElementById("video");
+let startCam = document.getElementById("startCam");
+let capture = document.getElementById("capture");
+let upload = document.getElementById("file-input");
+
+let preview = document.getElementById("preview");
+let imageData = document.getElementById("image_data");
+
+let stream;
+
+// CAMERA START
+startCam.onclick = async function () {
+  stream = await navigator.mediaDevices.getUserMedia({ video: true });
+  video.srcObject = stream;
+};
+
+// CAPTURE
+capture.onclick = function () {
+
+  let canvas = document.createElement("canvas");
+  canvas.width = 400;
+  canvas.height = 300;
+
+  let ctx = canvas.getContext("2d");
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  let imgSrc = canvas.toDataURL("image/png");
+
+  preview.src = imgSrc;
+  imageData.value = imgSrc;
+};
+
+// UPLOAD
+upload.addEventListener("change", function (e) {
+  if (e.target.files.length) {
+
+    let reader = new FileReader();
+
+    reader.onload = function (event) {
+      preview.src = event.target.result;
+      imageData.value = event.target.result;
+    };
+
+    reader.readAsDataURL(e.target.files[0]);
+  }
+});
+
+</script>
+
+{% endblock %}
+
+{% block mainbody %} {% endblock %}

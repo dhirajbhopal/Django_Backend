@@ -1,0 +1,78 @@
+django-payments
+razorpay
+tablib
+import_export
+openpyxl
+pandas
+num2words
+pyqrcode
+qrcode 
+pytz==2023.3.post1
+Django==5.0.6
+django-appconf==1.0.6
+django-imagekit==5.0.0
+django-multiselectfield==0.1.13
+gunicorn==23.0.0
+packaging==24.1
+pilkit==3.0
+pillow==10.3.0
+python-dotenv==1.0.1
+sqlparse==0.5.0
+tzdata==2024.1
+whitenoise==6.7.0
+Flask
+urlencode 
+uuid
+dotenv
+geoip2   (device location)
+pyyaml user-agents
+django-login-history2
+django-location-field
+decorators 
+djangorestframework
+cryptography
+install --upgrade certifi
+install --upgrade ssl
+install --upgrade requests
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+ brew install openssl
+
+
+ MyQsl Module Required
+
+ pip install PyMySQL
+ pip install mysqlclient
+port:-3306
+xprotocol port :- 33060 
+tcp/ip
+
+root pass:- patel@PJKSS#dehri$bihar%2026
+user :-pjkssdhiraj  
+pass:- patel@PJKSS#dehri$bihar%2026
+windows server name:-MySQL80
+
+change command js to sql :- \sql
+
+run command :-  \connect root@localhost
+
+check version1 :- mysql --version  
+check version1 :- "C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe" --version
+
+path:- C:\Program Files\MySQL\MySQL Server 8.0\bin  (important)
+
+backup MySQL database :- mysqldump -u pjkssdhiraj -p pjkss_db > "C:\Users\Dhiraj-PC\Desktop\pjkss_backup.sql"
+
+
+git clone https://github.com/dhirajbhopal/PJKSS.git
+
+git remote add origin https://github.com/dhirajbhopal/PJKSS.git
+
+git push -u -f origin main
+
+
+madho ji 8909420708 naksa banaye dehri
+
+
+python any wherecommand
+
+to upload data base :- mysql -h pjkss.mysql.pythonanywhere-services.com -u pjkss -p pjkss\$pjkss_db < /home/pjkss/pjkss_backup.sql

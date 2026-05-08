@@ -1,0 +1,71 @@
+.menu
+	{
+		font-size:15px!important;
+		color: white!important;
+		font-family:Engravers MT;
+		text-decoration:none;
+	}
+.navbar1
+{
+	background: #ccf0ed!important;
+}
+
+
+.navmenu
+	{
+		font-size: 20px!important;
+		color: white!important;
+		font-weight:none;
+		font-family: Engravers MT;
+	}
+.sidemenu
+{
+	color:#53bf37!important;
+	text-decoration: none!important;
+
+}
+
+.product
+{
+	font-style:index!important;
+	color:white!important;
+	font-size: 14px!important;
+	text-align:center!important;
+	font-family: Calibri!important;
+}
+
+.menu2
+	{
+		font-size:20px!important;
+		color: white!important;
+		font-family:Engravers MT;
+		text-decoration:none;
+	}
+
+.profile
+{
+	    font-size:15px!important;
+		color: white!important;
+		font-family:Engravers MT;
+		text-decoration:none;
+		text-align: center;!important;
+		border: red 2px solid;
+} 
+.profiledata
+{
+	    font-size:15px!important;
+		color:black!important;
+		font-family:Engravers MT;
+		text-decoration:none;
+		text-align: center;!important;
+		border:2px solid;
+}
+
+
+
+.btn{
+	box-shadow: 1px 1px 1px grey;
+	color: aqua;
+	background-color: brown;
+}
+

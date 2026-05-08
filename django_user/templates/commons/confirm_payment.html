@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Profile{% endblock title %}
+{% block content %} 
+
+  <h2>Confirm Payment for Order #{{ order.id }}</h2>
+  <form method="post">{% csrf_token %}
+    <label>UPI Transaction ID (from your app):<br>
+      <input name="txn_id" required>
+    </label><br>
+    <label>Your UPI VPA (optional):<br>
+      <input name="payer_vpa">
+    </label><br>
+    <button type="submit">Submit</button>
+  </form>
+  <p>After submission, our team will manually verify the txn and mark order as paid.</p>
+
+ {% endblock content %}
+{% block mainbody %} {% endblock %}

@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Login{% endblock title %}
+{% block forgot %}  {% endblock %}
+{% block default %}  {% endblock %}
+{% block content %}
+
+ <div class="container bg-white rounded rounded-5" style="width:400px;">
+   <a  onclick="history.back()"><img src="{% static 'img/animated-icon-backward_2.gif' %}" height="45px"></a>
+   <a href="/" style="font-size:35px;"><i class="fa fa-home faicon " style="color:green;" aria-hidden="true"></i></a>
+<form method="post" action="{% url 'login' %}">
+  {% csrf_token %}
+  <!-- Email input -->
+  <div data-mdb-input-init class="form-outline mb-4 form-group">
+       <label class="form-label pt-3" for="{{ form.username.id_for_label }}" for="form2Example1" style="color:green;">Email Id</label> <label class="form-label" for="form3Example1c" style="color:red;">*</label><br>
+          {{form.username}}
+          </div>
+
+  <!-- Password input -->
+   <div data-mdb-input-init class="form-outline mb-4 form-group">
+     <label class="form-label" for="{{ form.password.id_for_label }}" style="color:green;">Password</label><label class="form-label" for="form3Example1c" style="color:red;">*</label><br>
+       {{form.password}}
+       </div>
+
+  <!-- 2 column grid layout for inline styling -->
+  <div class="row mb-4">
+    <div class="col d-flex justify-content-center">
+      <!-- Checkbox -->
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" value="" id="form2Example31" checked />
+        <label class="form-check-label" for="form2Example31"> Remember me </label>
+      </div>
+</div>
+    <div class="col">
+      <!-- Simple link -->
+      <a href="{% url 'password_reset' %}" style="color:blue;">Forgot password?</a>
+    </div>
+  </div>
+  <!-- Submit button -->
+  <div class="bg-light rounded rounded-5">
+  <button data-mdb-button-init data-mdb-ripple-init class="btn btn-primary btn-block">Sign in</button>
+</div>
+</form>
+  <!-- Register buttons -->
+  <div class="text-center">
+  Not a member? <a href="{% url 'signup' %}" style="color:red;">Register/Signup</a>
+  
+</div>
+</div>
+
+{% endblock content %}
+{% block mainbody %} {% endblock %}
