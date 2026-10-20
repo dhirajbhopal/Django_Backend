@@ -70,7 +70,7 @@ class User(AbstractUser):
 
 class UniqueCode(models.Model): #serianno code for letterpad
     code=models.CharField(max_length=25,unique=True)
-    issuername=models.CharField(max_length=50)
+    issuername=models.CharField(max_length=80)
     issuedto=models.CharField(max_length=80,blank=True,null=True)
     subject=models.CharField(max_length=100,blank=True,null=True)
     issuedate=models.DateField(blank=True, null=True)

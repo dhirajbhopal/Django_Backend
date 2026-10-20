@@ -20,6 +20,7 @@ import random
 import string
 import json
 import smtplib
+from django.db import transaction
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -641,11 +642,11 @@ def profile_api(request):
 # GENERATE UNIQUE CODE API
 # =========================================
 
-@csrf_exempt
+"""@csrf_exempt
 def generate_unique_code_api(request):
     defaults="PJKSS"
     def create_code():
-        """Generates a random 10-character alphanumeric string."""
+        Generates a random 10-character alphanumeric string.
         return ''.join(
             random.choices(string.ascii_uppercase + string.digits, k=10)
         )
@@ -668,7 +669,111 @@ def generate_unique_code_api(request):
     return JsonResponse({
         "success": True,
         "code": code
-    })
+    }) """
+
+
+@csrf_exempt
+def generate_unique_code_api(request):
+
+    if request.method != "POST":
+        return JsonResponse({
+            "success": False,
+            "message": "POST request required"
+        }, status=405)
+
+    try:
+        data = json.loads(request.body)
+
+        issuername = data.get("issuername", "").strip()
+        issuedto = data.get("issuedto") or None
+        subject = data.get("subject") or None
+        issuedate = data.get("issuedate") or None
+
+        if not issuername:
+            return JsonResponse({
+                "success": False,
+                "message": "Issuer name is required"
+            }, status=400)
+
+        if len(issuername) > 80:
+            return JsonResponse({
+                "success": False,
+                "message": "Issuer name cannot exceed 50 characters"
+            }, status=400)
+
+        if issuedto and len(issuedto) > 80:
+            return JsonResponse({
+                "success": False,
+                "message": "Issued-to name cannot exceed 80 characters"
+            }, status=400)
+
+        if subject and len(subject) > 300:
+            return JsonResponse({
+                "success": False,
+                "message": "Subject cannot exceed 100 characters"
+            }, status=400)
+
+        if issuedate:
+            try:
+                datetime.strptime(issuedate, "%Y-%m-%d")
+            except ValueError:
+                return JsonResponse({
+                    "success": False,
+                    "message": "Invalid issue date"
+                }, status=400)
+
+        prefix = "PJKSS"
+        current_year = datetime.now().year
+
+        def create_code():
+            return "".join(
+                random.choices(
+                    string.ascii_uppercase + string.digits,
+                    k=10
+                )
+            )
+
+        # Generate and save a unique code.
+        # A transaction protects the database operation.
+        with transaction.atomic():
+
+            while True:
+                code = f"{prefix}{current_year}{create_code()}"
+
+                if not UniqueCode.objects.filter(code=code).exists():
+                    break
+
+            record = UniqueCode.objects.create(
+                code=code,
+                issuername=issuername,
+                issuedto=issuedto,
+                subject=subject,
+                issuedate=issuedate or None
+            )
+
+        return JsonResponse({
+            "success": True,
+            "code": record.code,
+            "issuername": record.issuername,
+            "issuedto": record.issuedto,
+            "subject": record.subject,
+            "issuedate": (
+                record.issuedate.isoformat()
+                if record.issuedate else None
+            )
+        })
+
+    except json.JSONDecodeError:
+        return JsonResponse({
+            "success": False,
+            "message": "Invalid JSON data"
+        }, status=400)
+
+    except Exception:
+        return JsonResponse({
+            "success": False,
+            "message": "Unable to generate serial number"
+        }, status=500)
 
 
 

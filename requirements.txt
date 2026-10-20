@@ -28,6 +28,17 @@ git remote add origin https://github.com/dhirajbhopal/PJKSS.git
 git push -u -f origin main
 
 
+
+
+remove existing repo
+git remote -v
+git remote set-url origin https://github.com/dhirajbhopal/Django_Backend.git
+
+
+
+
+
+
 madho ji 8909420708 naksa banaye dehri
 
 

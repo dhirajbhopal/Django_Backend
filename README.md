@@ -33,6 +33,8 @@ In this tutorial, we will learn how to create Sign Up or Registration Form in Dj
 
 ## git remote add origin https://github.com/dhirajbhopal/PJKSS.git
 
+## git clone https://github.com/dhirajbhopal/Django_Backend.git
+
 ## git push -u -f origin main/master
 
 
