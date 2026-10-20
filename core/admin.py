@@ -17,7 +17,7 @@ class facultyAdmin(admin.ModelAdmin):
 class UserAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {"fields": ("username", "email", "masked_password")}),
-        (("Personal info"), {"fields": ("first_name", "last_name", "role", "image", "address")}),
+        (("Personal info"), {"fields": ("first_name", "last_name", "role", "image", "address" ,"mobileno", "gender")}),
         (
             ("Permissions"),
             {

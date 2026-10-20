@@ -1,449 +1,780 @@
-from django.shortcuts import render, redirect, HttpResponse,HttpResponseRedirect
 from django.http import JsonResponse
-from django.urls import reverse_lazy
-from django.views.generic import CreateView, UpdateView
-from core.forms import SignUpForm, ProfileForm,ImgForm
-from django.contrib.auth.models import User
-from django.contrib import auth
-from django.urls import reverse
 from django.views import View
-from core.models import User,UniqueCode,donation,UserLoginInfo,updates
-from .models import UserLoginInfo
-from django.conf import settings
-from django.contrib import messages
-from django.db.utils import IntegrityError
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.hashers import check_password
-import smtplib
-import os
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from random import randint
-from django.conf import settings 
-from django.core.files.storage import FileSystemStorage
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import authenticate, login, logout
-from django.utils import timezone
-from PIL import Image
-import base64
-from django.core.files.uploadedfile import InMemoryUploadedFile
-# upi Payennet down
-from urllib.parse import urlencode
-import uuid
-from django.shortcuts import render, get_object_or_404, redirect
-from .utils import build_upi_deeplink
-from io import BytesIO
-import qrcode
-# Password reset 
-from django.contrib.auth.tokens import default_token_generator
-from django.utils.http import urlsafe_base64_encode
-from django.utils.encoding import force_bytes
-from django.template.loader import render_to_string
-from django.core.mail import send_mail
+from django.views.decorators.csrf import csrf_exempt
+from django.core.files.base import ContentFile
+from django.utils.decorators import method_decorator
+from core.models import User, UniqueCode, donation, UserLoginInfo, updates
+from django.contrib.auth.models import User
+from rest_framework import serializers
 from django.db.models import Sum
-from .models import UniqueCode
-import random
-import string
-
-# user loaction
 from django.contrib.auth.signals import user_logged_in
 from django.dispatch import receiver
 from .utils import get_client_ip, get_geo_info, get_device_info
+import json
+import os
+import base64
+import random
+import string
+import json
+import smtplib
+from django.contrib.auth import authenticate, login, logout
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+import qrcode
+from io import BytesIO
+from rest_framework.views import APIView
+from django.http import HttpResponse
+from django.conf import settings
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from django.utils.http import (urlsafe_base64_encode,urlsafe_base64_decode)
+from django.utils.encoding import force_bytes
+from rest_framework import viewsets
+#from .serializers import UserSerializer, UniqueCodeSerializer, donationSerializer , UserLoginInfoSerializer ,updatesSerializer
+from django.db import IntegrityError
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from django.contrib.auth import get_user_model
 from datetime import datetime
+from .serializers import UserLoginInfoSerializer
+
+User = get_user_model()
 
 
-class ProfileView(View):
-    if User.is_authenticated:
-        def get(self, request):
-            form = ProfileForm(request.POST)
-            return render(request,'commons/profile.html',{'form':form})
 
-class ProfileUpdate(UpdateView):
-    if User.is_authenticated:
-        model = User
-        form_class = ProfileForm
-        success_url = reverse_lazy('home')
-        template_name = 'commons/profile.html'
+# =========================================
+# SIGNUP API
+# =========================================
 
-class Imageview(View):
-    if User.is_authenticated:
-        def get(self, request):
-            form = ImgForm(request.POST)
-            return render(request,'commons/imageupdate.html',{'form':form})
+# ==========================================
+# SIGNUP API
+# ==========================================
 
-class mysingup(View):
+@method_decorator(csrf_exempt, name='dispatch')
+class Signup(View):
 
-    def get(self,request):
+    def post(self, request):
+
         try:
-            return render(request,'commons/signup.html')
-        except Exception as ex:
-            msg="signup form not found"
-            return render(request,'base.html',{'msg':msg})
+            data = json.loads(request.body)
 
+            email = data.get("email")
 
-from django.core.files.base import ContentFile
-from django.shortcuts import redirect
+            # CHECK EMAIL EXISTS
+            if User.objects.filter(email=email).exists():
+                return JsonResponse({
+                    "success": False,
+                    "message": "Email already registered"
+                }, status=400)
 
-@login_required
-def Imageupdate(req):
-    try:
-        email = req.POST.get("email")
-        user = User.objects.get(email=email)
-
-        # ---- DELETE OLD IMAGE ----
-        if user.image:
-            if os.path.isfile(user.image.path):
-                os.remove(user.image.path)
-
-        new_image = None
-
-        # =========================
-        # 1️⃣ CASE: FILE UPLOAD
-        # =========================
-        if 'image' in req.FILES:
-            new_image = req.FILES['image']
-
-        # =========================
-        # 2️⃣ CASE: CAMERA (BASE64)
-        # =========================
-        elif req.POST.get("image_data"):
-            image_data = req.POST.get("image_data")
-
-            format, imgstr = image_data.split(';base64,')
-            ext = format.split('/')[-1]
-
-            new_image = ContentFile(
-                base64.b64decode(imgstr),
-                name=f"user_{user.id}.{ext}"
+            # CREATE USER
+            user = User.objects.create(
+                username=data.get("username"),
+                mobileno=data.get("mobileno"),
+                email=email,
+                first_name=data.get("first_name"),
+                last_name=data.get("last_name"),
+                gender=data.get("gender"),
+                address=data.get("address"),
+                password=make_password(data.get("password"))
             )
 
-        # =========================
-        # SAVE IMAGE
-        # =========================
-        if new_image:
-            user.image = new_image
-            user.save()
-            messages.success(req, "Profile photo updated successfully")
-        else:
-            messages.error(req, "No image selected")
+            # =========================
+            # ADMIN MAIL
+            # =========================
 
-        return redirect('/')
+            admin_message = f"""
+            <html>
+            <body>
+            <h1 style='color:red'>
+            PATEL JAN KALYAN SEVA SAMITI
+            </h1>
 
-    except Exception as ex:
-        print("Error while updating image:", ex)
-        messages.error(req, "Something went wrong while updating image")
-        return redirect('/')
+            <hr>
 
-class forgotpassword(View):
+            Hello Admin,<br><br>
 
-    def get(self,request):
-        return render(request,'commons/forgotpass.html')
+            One New User has registered.<br><br>
 
-class signuptask(View):
+            User Email :-
+            <b>{email}</b>
 
-    def get(self,request):
-        code = 0
-        try:
-            encryptedpassword=make_password(request.GET['password'])
-            global emailuser
-            emailuser = request.GET.get("emailid")
-            ob=User()
-            ob.username=request.GET.get("username")
-            ob.mobileno=request.GET.get("mobileno")
-            ob.email=request.GET.get("emailid")
-            ob.first_name=request.GET.get("name")
-            ob.last_name=request.GET.get("name1")
-            ob.password=encryptedpassword
-            ob.gender=request.GET.get("gender")
-            ob.address=request.GET.get("address")
-            ob.save()
-        except IntegrityError as ex:          
-            code = 1
-            messages.success(request,'Email is Already Registered! need to reset password')
-            return redirect('login')
-        except Exception as ex:       
-            code = 2
-            messages.success(request,'Email id does not exist !')
-            return render(request,'commons/signup.html')
-        return redirect("/cheksignup?err="+str(code))
+            <br><br>
+
+            Visit :
+            <span style='color:red'>
+            https://pjkss.com/pateladminlogin/?next=/pateladminlogin
+            </span>
+
+            <br><br>
+
+            Thanks
+            </body>
+            </html>
+            """
+
+            smtp = smtplib.SMTP(
+                host='smtp.gmail.com',
+                port=587
+            )
+
+            smtp.starttls()
+
+            smtp.login(
+                "pjkssinfo@gmail.com",
+                "bwqpbkcdutyqheoi"
+            )
+
+            msg = MIMEMultipart()
+
+            msg['From'] = "PJKSS ADMIN"
+            msg['To'] = "dhirajpatel08@gmail.com"
+            msg['Subject'] = "New Registration"
+
+            msg.attach(
+                MIMEText(admin_message, 'html')
+            )
+
+            smtp.send_message(msg)
+
+            smtp.quit()
+
+            # =========================
+            # USER SUCCESS MAIL
+            # =========================
+
+            user_message = f"""
+            <html>
+            <body>
+
+            <h1 style='color:red'>
+            PATEL JAN KALYAN SEVA SAMITI
+            </h1>
+
+            <hr>
+
+            Hello {email},<br><br>
+
+            Your Registration is Successful.<br><br>
+
+            User ID :-
+            <b>{email}</b>
+
+            <br><br>
+
+            Visit :
+            <span style='color:red'>
+            https://pjkss.com/login
+            </span>
+
+            <br><br>
+
+            Thanks
+
+            </body>
+            </html>
+            """
+
+            smtp = smtplib.SMTP(
+                host='smtp.gmail.com',
+                port=587
+            )
+
+            smtp.starttls()
+
+            smtp.login(
+                "pjkssinfo@gmail.com",
+                "bwqpbkcdutyqheoi"
+            )
+
+            msg = MIMEMultipart()
+
+            msg['From'] = "PJKSS ADMIN"
+            msg['To'] = email
+            msg['Subject'] = "Registration Successful"
+
+            msg.attach(
+                MIMEText(user_message, 'html')
+            )
+
+            smtp.send_message(msg)
+
+            smtp.quit()
+
+            return JsonResponse({
+                "success": True,
+                "message": "Registration successful",
+                "user_id": user.id
+            }, status=201)
+
+        except IntegrityError:
+
+            return JsonResponse({
+                "success": False,
+                "message": "Email already exists"
+            }, status=400)
+
+        except Exception as e:
+
+            return JsonResponse({
+                "success": False,
+                "message": str(e)
+            }, status=500)
 
 
-def cheksignup(req):
-    code = req.GET.get("err")
-    msg = ""
-    if code=="0":
-        message ="""<html><body><h1 style='color:red'>PATEL JAN KALYAN SEVA SAMITI</h1> <hr>Hello Mr. Dhiraj Patel Admin <br><br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        One New User has registered, Please assign his/her Role and Roll No. <b><br>
-        User Eamil id is:- """+emailuser+"""<br><br>
-        Visit :- <span style='color:red'> https://pjkss.com/pateladminlogin/?next=/pateladminlogin </spna> </b> to login <br>
-        <br><b> Thanks<br><br> Patel Jan Kalyan Seva Samiti <br>  Head Office Dehri </b></body></html>"""
-        smtp = smtplib.SMTP(host='smtp.gmail.com', port=587)
-        smtp.starttls()
-        smtp.login("pjkssinfo@gmail.com","bwqpbkcdutyqheoi")
-        msg = MIMEMultipart() 
-        msg['From'] ="PJKSS ADMIN"
-        msg['To'] = "dhirajpatel08@gmail.com"
-        msg['Subject'] = "New Registeration"
-        msg.attach(MIMEText(message, 'html'))
-        smtp.send_message(msg)
-        smtp.quit()
-        message ="""<html><body><h1 style='color:red'>PATEL JAN KALYAN SEVA SAMITI</h1> <hr>Hello Mr. """+emailuser+""" <br><br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        Your Registration is Successfull <b><br>
-        Your User id is:- """+emailuser+"""<br><br>
-        Visit :- <span style='color:red'> https://pjkss.com/login </spna> </b> to login <br>
-        <br><b> Thanks<br><br> Patel Jan Kalyan Seva Samiti <br>  Head Office Dehri </b></body></html>"""
-        smtp = smtplib.SMTP(host='smtp.gmail.com', port=587)
-        smtp.starttls()
-        smtp.login("pjkssinfo@gmail.com","bwqpbkcdutyqheoi")
-        msg = MIMEMultipart() 
-        msg['From'] ="PJKSS ADMIN"
-        msg['To'] = emailuser
-        msg['Subject'] = "Registration is Successfull"
-        msg.attach(MIMEText(message, 'html'))
-        smtp.send_message(msg)
-        smtp.quit()
-        messages.success(req,"Registeration Done Successfully")
-        return redirect('login')
-    if code=="1":
-        messages.success(req,'Email is Already Registered !')      
-    if code=="2":
-        messages.success(req,'Registeration Failed !')     
-    return render(req,'commons/signup.html')
+# ==========================================
+# GENERATE OTP
+# ==========================================
 
 def generateOTP(n):
-    range_start = 10**(n-1)
-    range_end = (10**n)-1
-    return randint(range_start, range_end)
+
+    range_start = 10 ** (n - 1)
+
+    range_end = (10 ** n) - 1
+
+    return random.randint(
+        range_start,
+        range_end
+    )
 
 
-def sendmail(email,otp):
+# ==========================================
+# SEND MAIL FUNCTION
+# ==========================================
+
+def sendmail(email, otp):
+
     try:
-        print("mail iniitializing")
-        message ="""<html><body><h1 style='color:red'>PATEL JAN KALYAN SEVA SAMITI</h1> <hr>Hello Mr. {0},<br><br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        Please enter otp to complete your registration <b><br><br>
-        Your OTP is :-<span style='color:red'>  {1} </spna> </b> please don't share to anyone.<br>
-        <br><b> Thanks<br><br> Patel Jan Kalyan Seva Samiti <br>  Head Office Dehri </b></body></html>""".format(email,otp)
-        smtp = smtplib.SMTP(host='smtp.gmail.com', port=587)
+
+        message = f"""
+        <html>
+        <body>
+
+        <h1 style='color:red'>
+        PATEL JAN KALYAN SEVA SAMITI
+        </h1>
+
+        <hr>
+
+        Hello {email},<br><br>
+
+        Please enter OTP to complete registration.
+
+        <br><br>
+
+        Your OTP is :
+        <span style='color:red'>
+        {otp}
+        </span>
+
+        <br><br>
+
+        Please don't share OTP with anyone.
+
+        <br><br>
+
+        Thanks
+
+        </body>
+        </html>
+        """
+
+        smtp = smtplib.SMTP(
+            host='smtp.gmail.com',
+            port=587
+        )
+
         smtp.starttls()
-        smtp.login("pjkssinfo@gmail.com","bwqpbkcdutyqheoi")
-        msg = MIMEMultipart() 
-        msg['From'] ="PJKSS ADMIN"
+
+        smtp.login(
+            "pjkssinfo@gmail.com",
+            "bwqpbkcdutyqheoi"
+        )
+
+        msg = MIMEMultipart()
+
+        msg['From'] = "PJKSS ADMIN"
         msg['To'] = email
         msg['Subject'] = "Registration OTP"
-        msg.attach(MIMEText(message, 'html'))
+
+        msg.attach(
+            MIMEText(message, 'html')
+        )
+
         smtp.send_message(msg)
-        smtp.quit()     
-        return True
-    except Exception as ex:       
-        return False
 
-
-def sendotp(request):
-    email = request.GET.get("email")
-    print("your mail is+++++ ",email)
-    if len(email)>0:
-        email = email
-        otp = generateOTP(6)
-        print("your OTP is+++++ ",otp)
-        check = sendmail(email,otp)
-        print("sending mail+++++ ")
-        request.session['loginotp'] = otp
-        return HttpResponse("OTP Send Successfully! "+str(otp)+" ")
-    else:
-        return HttpResponse("OTP Send Failed, Please Try Again  !")           
-                
-    return HttpResponse("Email Id Not Exist !")
-
-
-
-def forgotsendmail(email,otp):
-    try:
-        print("mail iniitializing")
-        message ="""<html><body><h1 style='color:red'>PATEL JAN KALYAN SEVA SAMITI</h1> <hr>Hello Mr. {0},<br><br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        Please enter otp to reset your password <b><br><br>
-        Your OTP is :-<span style='color:red'>  {1} </spna> </b> please don't share to anyone.<br>
-        <br><b> Thanks<br><br> Patel Jan Kalyan Seva Samiti <br>  Head Office Dehri </b></body></html>""".format(email,otp)
-        smtp = smtplib.SMTP(host='smtp.gmail.com', port=587) 
-        smtp.starttls()
-        smtp.login("pjkssinfo@gmail.com","bwqpbkcdutyqheoi")
-        msg = MIMEMultipart() 
-        msg['From'] ="PJKSS ADMIN"
-        msg['To'] = email
-        msg['Subject'] = "Password reset OTP"
-        msg.attach(MIMEText(message, 'html'))
-        smtp.send_message(msg)
-        smtp.quit()     
-        return True
-    except Exception as ex:       
-        return False
-
-
-def forgotsendotp(request):
-    email = request.GET.get("email")
-    print("your mail is+++++ ",email)
-    if len(email)>0:
-        email = email
-        otp = generateOTP(6)
-        print("your OTP is+++++ ",otp)
-        check = forgotsendmail(email,otp)
-        print("sending mail+++++ ")
-        request.session['loginotp'] = otp
-        return HttpResponse("OTP Send Successfully! "+str(otp)+" ")
-    else:
-        return HttpResponse("OTP Send Failed, Please Try Again  !")           
-                
-    return HttpResponse("Email Id Not Exist !")
-
-
-def resetpass(req):
-    try:
-        email=req.POST.get("emailid1")
-        print("converted email id",email)
-        encryptedpassword=make_password(req.POST['password'])
-        rpass=User.objects.get(email=email)
-        rpass.password=encryptedpassword
-        rpass.save()
-        message ="""<html><body><h1 style='color:red'>PATEL JAN KALYAN SEVA SAMITI</h1> <hr>Hello Mr."""+email+""",<br><br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        You have successfuly reset your password <b><br><br>
-        Visit :- <span style='color:red'> https://pjkss.com/login </spna> </b> to login <br>
-        <br><b> Thanks<br><br> Patel Jan Kalyan Seva Samiti <br>  Head Office Dehri </b></body></html>"""
-        smtp = smtplib.SMTP(host='smtp.gmail.com', port=587) 
-        smtp.starttls()
-        smtp.login("pjkssinfo@gmail.com","bwqpbkcdutyqheoi")
-        msg = MIMEMultipart() 
-        msg['From'] ="PJKSS ADMIN"
-        msg['To'] = email
-        msg['Subject'] = "Password reset Done"
-        msg.attach(MIMEText(message, 'html'))
-        smtp.send_message(msg)
         smtp.quit()
-        messages.success(req,'Password Changed Successfully')
-        return redirect('login')
-    except Exception as ex:
-        messages.success(req,'Sorry, Email id is not register with us')
-        return redirect('login')
+
+        return True
+
+    except Exception as e:
+
+        print(e)
+
+        return False
 
 
-def logoutUser(request):
-    logout(request)
-    return redirect('login')
+# ==========================================
+# SEND OTP API
+# ==========================================
 
-@login_required
-def generate_unique_code(request):
-    defaults="PJKSS"
-    current_year = datetime.now().year
+@csrf_exempt
+def sendotp_api(request):
 
-    def create_code():
-        # Generates a random 10-character string with letters + digits
-        return ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
-    code = defaults+f"{current_year}"+create_code()
-    while UniqueCode.objects.filter(code=code).exists():
-        code = create_code()
-    UniqueCode.objects.create(code=code)
-    messages.success(request,f'Generted Serial No is:- {code}')
-    #return JsonResponse({'unique_code': code})
-    #return redirect('/addserialno', {}'unique_code': code})
-    return redirect('/addserialno')
+    if request.method != "POST":
 
+        return JsonResponse({
+            "success": False,
+            "message": "POST method required"
+        })
 
-@login_required
-def addserialno(req):
-    return render(req,'adminrole/addserialno.html')
-
-
-@login_required
-def searchserialno(req):
-    code=req.POST.get("serialno")
-    serial=UniqueCode.objects.filter(code=code)
-    for i in serial:
-        if (i.code!=code):
-            messages.success(req,"Serial No. Not Found")
-            return render(req,'adminrole/searchserialno.html')   
-        else:
-            serial=UniqueCode.objects.filter(code=code)
-            return render(req,'adminrole/searchserialno.html',{'serial':serial})   
-    messages.success(req,"Serial No. Not Found")  
-    return render(req,'adminrole/searchserialno.html')
-
-
-@login_required
-def searchserialnoall(req):
-    serialall=UniqueCode.objects.all()
-    return render(req,'adminrole/searchserialnoall.html',{'serialall':serialall})    
-
-
-
-
-
-
-@login_required
-def editserialno(req):
     try:
-        if req.method=="GET":
-            code=req.GET.get("serialno")
-            serialdata=UniqueCode.objects.get(code=code)
-            serialdata=UniqueCode.objects.filter(code=code)
-            return render(req,'adminrole/editserialno.html',{'serialdata':serialdata})
+
+        data = json.loads(request.body)
+
+        email = data.get("email")
+
+        if not email:
+
+            return JsonResponse({
+                "success": False,
+                "message": "Email required"
+            })
+
+        otp = generateOTP(6)
+
+        check = sendmail(email, otp)
+
+        if check:
+
+            request.session['loginotp'] = otp
+
+            return JsonResponse({
+                "success": True,
+                "message": "OTP Sent Successfully",
+                "otp": otp
+            })
+
         else:
-            code=req.POST.get("serialno")
-            modstu3=UniqueCode.objects.get(code=code)
-            modstu3.issuedto=req.POST.get("issuedto")
-            modstu3.subject=req.POST.get("subject")
-            modstu3.issuedate=req.POST.get("issuedate")
-            modstu3.issuername=req.POST.get("issuername")
-            modstu3.save()
-            messages.success(req,"Serial No Updated ") 
-            return redirect('/searchserialno')
-    except Exception as ex:
-        messages.success(req,"Please fill corrcet Date ") 
-        return redirect('/addserialno')
+
+            return JsonResponse({
+                "success": False,
+                "message": "OTP Sending Failed"
+            })
+
+    except Exception as e:
+
+        return JsonResponse({
+            "success": False,
+            "message": str(e)
+        })
+# =========================================
+# LOGIN API
+# =========================================
+@csrf_exempt
+def login_api(request):
+
+    if request.method == "POST":
+
+        data = json.loads(request.body)
+
+        email = data.get("email")
+        password = data.get("password")
+
+        try:
+
+            user = User.objects.get(email=email)
+
+            # CHECK PASSWORD
+            if user.check_password(password):
+
+                # VERY IMPORTANT
+                user.backend = (
+                    "django.contrib.auth.backends.ModelBackend"
+                )
+
+                # LOGIN SESSION
+                login(request, user)
+
+                return JsonResponse({
+                    "success": True,
+                    "message": "Login Successful",
+                    "user": {
+                        "id": user.id,
+                        "role": user.role,
+                        "username": user.username,
+                        "email": user.email,
+                        "first_name": user.first_name,
+                        "last_name": user.last_name,
+                        "mobileno": user.mobileno,
+                        "gender": user.gender,
+                        "address": user.address,
+                        "image": str(user.image)
+                                }
+                })
+
+            else:
+
+                return JsonResponse({
+                    "success": False,
+                    "message": "Invalid Password"
+                })
+
+        except User.DoesNotExist:
+
+            return JsonResponse({
+                "success": False,
+                "message": "Email Not Found"
+            })
+
+    return JsonResponse({
+        "success": False
+    })
+
+# =========================================
+# LOGOUT API
+# =========================================
+
+def logout_api(request):
+
+    logout(request)
+
+    return JsonResponse({
+        "success": True,
+        "message": "Logout successful"
+    })
 
 
-def gallery1(req):
-    return render(req,'gallery1.html')
+# =========================================
+# PROFILE API
+# =========================================
+
+def profile_api(request):
+    # 1. CHECK AUTHENTICATION
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            "success": False,
+            "message": "User Not Logged In"
+        }, status=401) # Explicit unauthorized status
+
+    try:
+        user = request.user
+
+        # Safe image handling
+        image_url = user.image.url if user.image else None
+        # Note: If these fields are on a Profile model, use user.profile.mobileno, etc.
+
+        return JsonResponse({
+            "success": True,
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "mobileno": getattr(user, 'mobileno', ''),
+                "gender": getattr(user, 'gender', ''),
+                "address": getattr(user, 'address', ''),
+                "image": str(user.image)
+            }
+        })
+    except Exception as e:
+        return JsonResponse({
+            "success": False,
+            "message": f"Server Error: {str(e)}"
+        }, status=500)
 
 
-def gallery2(req):
-    return render(req,'gallery2.html')
+# =========================================
+# UPDATE PROFILE API
+# =========================================
+@csrf_exempt
+def update_profile_api(request):
+    # 1. Ensure the user is actually logged in
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            "success": False,
+            "message": "Authentication Required. Please log in."
+        }, status=401)
 
-def gallery3(req):
-    return render(req,'gallery3.html')
+    # 2. Only allow PUT requests
+    if request.method != "PUT":
+        return JsonResponse({
+            "success": False,
+            "message": "PUT Method Required"
+        }, status=405)
 
-def donate(req):
-    return render(req,'donate.html')
+    try:
+        # Load the incoming React JSON data
+        data = json.loads(request.body)
+
+        # DYNAMIC USER: Get the user directly from the request session
+        user = request.user
+
+        # Update core user fields safely
+        user.first_name = data.get("first_name", user.first_name)
+        user.last_name = data.get("last_name", user.last_name)
+        user.mobileno = data.get("mobileno", user.mobileno)
+        user.gender = data.get("gender", user.gender)
+        user.address = data.get("address", user.address)
+
+        # Save changes to the database
+        user.save()
+
+        return JsonResponse({
+            "success": True,
+            "message": "Profile Updated Successfully"
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            "success": False,
+            "message": f"Server Error: {str(e)}"
+        }, status=500)
 
 
-def donationdetail(request):
-    if request.method=="POST":
-        context = {}
-        amount=request.POST.get("amount")
-        qr_text = "upi://pay?pa=dhirajpatel08@okaxis&pn=DHIRAJ%20PATEL&am="+amount+"&cu=INR&aid=uGICAgID1xJq5DA"
-        qr_image = qrcode.make(qr_text, box_size=15)
-        qr_image_pil = qr_image.get_image()
-        stream = BytesIO()
-        qr_image_pil.save(stream, format='PNG')
-        qr_image_data = stream.getvalue()
-        qr_image_base64 = base64.b64encode(qr_image_data).decode('utf-8')
-        context['qr_image_base64'] = qr_image_base64
-        context['variable'] = qr_text
-        upilinkPTM="https://mercury-uat.phonepe.com/transact/uat_v2?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmVzT24iOjE3NjAxODUwMzU2MTUsIm1lcmNoYW50SWQiOiJNMjNEMExMSEpGSUZOIiwibWVyY2hhbnRPcmRlcklkIjoiT01QTDI1MTAxMTExMTcxNTYxMzUyODYwMTIifQ.smreWX7rPu8g6SJwVi3l9HpeINGHwAsR3zW2N_muEAA"
-        return render(request,'site/donationqr.html',{'qr_image_base64':qr_image_base64,"upilinkPTM":upilinkPTM})
-    else:
-        return render(request,'site/donation.html')
+
+# =========================================
+# IMAGE UPLOAD API
+# =========================================
+
+@csrf_exempt
+def imageupload(request):
+
+    try:
+
+        # USER ID
+        user_id = request.POST.get("user_id")
+
+        # IMAGE FILE
+        image = request.FILES.get("image")
+
+        if not user_id:
+
+            return JsonResponse({
+                "success": False,
+                "message": "User ID missing"
+            })
+
+        if not image:
+
+            return JsonResponse({
+                "success": False,
+                "message": "Image missing"
+            })
+
+        # GET USER
+        user = User.objects.get(id=user_id)
+
+        # DELETE OLD IMAGE
+        if user.image:
+
+            old_image_path = user.image.path
+
+            if os.path.isfile(old_image_path):
+
+                os.remove(old_image_path)
+
+        # SAVE NEW IMAGE
+        user.image = image
+
+        user.save()
+
+        return JsonResponse({
+
+            "success": True,
+
+            "message": "Image uploaded successfully",
+
+            "image_url": user.image.url
+
+        })
+
+    except Exception as e:
+
+        print(e)
+
+        return JsonResponse({
+
+            "success": False,
+
+            "error": str(e)
+
+        })
+
+
+# =========================================
+# API Profile data view
+# =========================================
+
+def profile_api(request):
+
+    if not request.user.is_authenticated:
+
+        return JsonResponse({
+            "success": False,
+            "message": "User Not Logged In"
+        })
+
+    user = request.user
+
+    return JsonResponse({
+        "success": True,
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "mobileno": user.mobileno,
+            "gender": user.gender,
+            "address": user.address,
+            "image": user.image.url if user.image else None
+        }
+    })
+
+# =========================================
+# GENERATE UNIQUE CODE API
+# =========================================
+
+@csrf_exempt
+def generate_unique_code_api(request):
+    defaults="PJKSS"
+    def create_code():
+        """Generates a random 10-character alphanumeric string."""
+        return ''.join(
+            random.choices(string.ascii_uppercase + string.digits, k=10)
+        )
+
+    # Get current year as string
+    current_year = datetime.now().year  # e.g., 2026
+
+    # Generate initial code with year included
+    code = defaults+f"{current_year}"+create_code()
+
+    # Ensure code is unique
+    while UniqueCode.objects.filter(code=code).exists():
+        #code = f"PJKSS{current_year}{create_code()}"
+        code = defaults+f"{current_year}"+create_code()
+
+    # Save the unique code
+    UniqueCode.objects.create(code=code)
+
+
+    return JsonResponse({
+        "success": True,
+        "code": code
+    })
 
 
 
-def donationlist(req):
-    donationdetails=donation.objects.all()
-    total_amount = donationdetails.aggregate(total=Sum('Amount'))['total']
-    return render(req,'member/donationlist.html',{'donationdetails':donationdetails, 'total_amount' :total_amount})
+
+# =========================================
+# SEARCH SERIAL API
+# =========================================
+
+@csrf_exempt
+def search_serial_api(request):
+
+    code = request.GET.get("serialno")
+
+    serial = UniqueCode.objects.filter(code=code).values()
+
+    if serial.exists():
+
+        return JsonResponse({
+            "success": True,
+            "data": list(serial)
+        })
+
+    return JsonResponse({
+        "success": False,
+        "message": "Serial not found"
+    }, status=404)
 
 
+# =========================================
+# SERIAL LIST API
+# =========================================
+
+@csrf_exempt
+def serial_list_api(request):
+
+    serials = UniqueCode.objects.all().values()
+
+    return JsonResponse({
+        "success": True,
+        "data": list(serials)
+    })
+
+
+# =========================================
+# UPDATE SERIAL API
+# =========================================
+
+@csrf_exempt
+def update_serial_api(request):
+
+    if request.method != "PUT":
+        return JsonResponse({
+            "success": False,
+            "message": "PUT method required"
+        }, status=405)
+
+    try:
+
+        data = json.loads(request.body)
+
+        code = data.get("serialno")
+
+        serial = UniqueCode.objects.get(code=code)
+
+        serial.issuedto = data.get("issuedto")
+        serial.subject = data.get("subject")
+        serial.issuedate = data.get("issuedate")
+        serial.issuername = data.get("issuername")
+
+        serial.save()
+
+        return JsonResponse({
+            "success": True,
+            "message": "Serial updated successfully"
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            "success": False,
+            "error": str(e)
+        }, status=400)
+
+
+# =========================================
+# DONATION LIST API
+# =========================================
+
+def donation_list_api(request):
+
+    donations = donation.objects.all().values()
+
+    # TOTAL AMOUNT
+    total_amount = donation.objects.aggregate(
+        total=Sum('Amount')
+    )['total'] or 0
+
+    return JsonResponse({
+        "success": True,
+        "data": list(donations),
+        "total_amount": total_amount
+    })
+
+
+# =========================================
+# LOGIN HISTORY API
+# =========================================
 # user loaction
 @receiver(user_logged_in)
 def log_user_login(sender, request, user, **kwargs):
@@ -462,43 +793,203 @@ def log_user_login(sender, request, user, **kwargs):
         device=device.get('device')
     )
 
-def login_history(request):
-    data = UserLoginInfo.objects.filter(user=request.user).order_by('-login_time')
-    return render(request, 'tracker/login_history.html', {'data': data})
+
+# =========================================
+# HOME API
+# =========================================
+
+class HomeApi(View):
+
+    def get(self, request):
+
+        data = updates.objects.all().order_by('-id').values()
+
+        return JsonResponse({
+            "success": True,
+            "updates": list(data)
+        })
 
 
+# Donation Qr Code API
 
-def publicsearch(req):
-    return render(req,'site/publicserialno.html')
+@api_view(["POST"])
+def donationdetail(request):
 
-def publicsearchno(req):
-    code=req.POST.get("serialno")
-    serial=UniqueCode.objects.filter(code=code)
-    for i in serial:
-        if (i.code!=code):
-            messages.success(req,"Serial No. Not Found")
-            return render(req,'adminrole/searchserialno.html')   
-        else:
-            serial=UniqueCode.objects.filter(code=code)
-            return render(req,'site/publicserialno.html',{'serial':serial})   
-    messages.success(req,"Serial No. Not Found") 
-    return render(req,'site/publicserialno.html')
-
-
-def adminupdated(request):
     try:
-        topicdata=topic()
-        topicdata.topic=request.GET.get("topic")
-        topicdata.date=request.GET.get("date")
-        topicdata.save()
-        messages.success(request,'Topic Updated Successfully')
-        return redirect('/')
-    except IntegrityError as ex:
-        messages.success(request,'Fill data is not correct')
-        return redirect('/')
 
-class home(View):
-    def get(self,request):
-        dataupdate=updates.objects.all().order_by('-id')
-        return render(request,'base.html',{'dataupdate':dataupdate})
-        
+        # GET AMOUNT FROM REACT
+        amount = request.data.get("amount")
+
+        # VALIDATION
+        if not amount:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Amount is required"
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # CREATE UPI LINK
+        qr_text = (
+            "upi://pay?"
+            "pa=dhirajpatel08@okaxis"
+            "&pn=DHIRAJ%20PATEL"
+            f"&am={amount}"
+            "&cu=INR"
+            "&aid=uGICAgID1xJq5DA"
+        )
+
+        # GENERATE QR CODE
+        qr_image = qrcode.make(qr_text, box_size=15)
+
+        stream = BytesIO()
+
+        qr_image.save(stream, format="PNG")
+
+        qr_image_data = stream.getvalue()
+
+        # CONVERT TO BASE64
+        qr_image_base64 = base64.b64encode(
+            qr_image_data
+        ).decode("utf-8")
+
+        # PHONEPE LINK
+        upilinkPTM = (
+            "https://mercury-uat.phonepe.com/transact/uat_v2?"
+            "token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+        )
+
+        # SEND RESPONSE TO REACT
+        return Response(
+            {
+                "success": True,
+                "amount": amount,
+                "qr_image_base64": qr_image_base64,
+                "upi_link": qr_text,
+                "upilinkPTM": upilinkPTM
+            },
+            status=status.HTTP_200_OK
+        )
+
+    except Exception as e:
+
+        return Response(
+            {
+                "success": False,
+                "message": str(e)
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+#Password rest email api views###
+
+
+class PasswordResetAPIView(APIView):
+
+    def post(self, request):
+
+        email = request.data.get('email')
+
+        try:
+            user = User.objects.get(email=email)
+
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+
+            reset_link = (
+                f"http://pjkss.com/"
+                f"reset-password/{uid}/{token}/"
+            )
+
+            send_mail(
+                'Password Reset',
+                f'Click this link to reset password:\n{reset_link}',
+                'yourgmail@gmail.com',
+                [email],
+                fail_silently=False,
+            )
+
+            return Response({
+                'message': 'Password reset link sent successfully'
+            })
+
+        except User.DoesNotExist:
+            return Response({
+                'error': 'User not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
+class PasswordResetConfirmAPIView(APIView):
+
+    def post(self, request):
+
+        uid = request.data.get('uid')
+        token = request.data.get('token')
+        password = request.data.get('password')
+
+        try:
+            user_id = urlsafe_base64_decode(uid).decode()
+            user = User.objects.get(pk=user_id)
+
+            if default_token_generator.check_token(user, token):
+                user.set_password(password)
+                user.save()
+
+                return Response({
+                    'message': 'Password changed successfully'
+                })
+
+            return Response({
+                'error': 'Invalid token'
+            }, status=400)
+
+        except Exception:
+            return Response({
+                'error': 'Something went wrong'
+            }, status=400)
+
+#Password rest manually api views###
+
+class ChangePasswordAPIView(APIView):
+
+    def post(self, request):
+
+        email = request.data.get("email")
+        old_password = request.data.get("old_password")
+        new_password = request.data.get("new_password")
+
+        try:
+
+            user = User.objects.get(email=email)
+
+            # CHECK OLD PASSWORD
+            if not user.check_password(old_password):
+
+                return Response({
+                    "success": False,
+                    "message": "Old password is incorrect"
+                })
+
+            # CHANGE PASSWORD
+            user.set_password(new_password)
+            user.save()
+
+            return Response({
+                "success": True,
+                "message": "Password changed successfully"
+            })
+
+        except User.DoesNotExist:
+
+            return Response({
+                "success": False,
+                "message": "User not found"
+            })
+
+
+
+
+
+

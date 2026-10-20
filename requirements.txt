@@ -1,50 +1,8 @@
-django-payments
-razorpay
-tablib
-import_export
-openpyxl
-pandas
-num2words
-pyqrcode
-qrcode 
-pytz==2023.3.post1
-Django==5.0.6
-django-appconf==1.0.6
-django-imagekit==5.0.0
-django-multiselectfield==0.1.13
-gunicorn==23.0.0
-packaging==24.1
-pilkit==3.0
-pillow==10.3.0
-python-dotenv==1.0.1
-sqlparse==0.5.0
-tzdata==2024.1
-whitenoise==6.7.0
-Flask
-urlencode 
-uuid
-dotenv
-geoip2   (device location)
-pyyaml user-agents
-django-login-history2
-django-location-field
-decorators 
-djangorestframework
-cryptography
-install --upgrade certifi
-install --upgrade ssl
-install --upgrade requests
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
- brew install openssl
 
-
- MyQsl Module Required
+MyQsl Module Required
 
  pip install PyMySQL
  pip install mysqlclient
-port:-3306
-xprotocol port :- 33060 
-tcp/ip
 
 root pass:- patel@PJKSS#dehri$bihar%2026
 user :-pjkssdhiraj  
@@ -76,3 +34,61 @@ madho ji 8909420708 naksa banaye dehri
 python any wherecommand
 
 to upload data base :- mysql -h pjkss.mysql.pythonanywhere-services.com -u pjkss -p pjkss\$pjkss_db < /home/pjkss/pjkss_backup.sql
+
+
+
+Python Installtio Required Rquired 
+
+npm install react
+npm install react react-dom
+
+MyQsl Module Required
+pip install django
+pip install --upgrade pip
+pip install PyMySQL
+pip install certifi
+pip install requests
+pip install djangorestframework
+pip install django-cors-headers
+pip isntall pillow
+pip isntall qrcode 
+
+
+
+react Installtio Required
+
+npm install axios
+npm install react-admin
+npm install @mui/material @emotion/react @emotion/styled
+npm install --legacy-peer-deps
+npm install ra-data-json-server
+npm install ra-data-simple-rest
+npm install ra-data-simple-rest --legacy-peer-deps
+npm install bootstrap
+npm install @fortawesome/fontawesome-free
+
+
+ns1.vercel-dns.com
+ns2.vercel-dns.com
+
+
+
+supabase-bistre-drawer (Vercel Database) comand in python
+
+batabase pass:- patel@PJKSS#dehri$bihar%2026   
+Databse Name:- pjkss_db_vercel
+connection url :- postgresql://postgres:patel@PJKSS#dehri$bihar%2026@db.civhkqvhozkqtuglydsn.supabase.co:5432/postgres
+
+postgresql://postgres:patel@PJKSS#dehri$bihar%2026@db.civhkqvhozkqtuglydsn.supabase.co:5432/postgres
+
+postgresql://postgres.civhkqvhozkqtuglydsn:patel@PJKSS#dehri$bihar%2026@aws-1-us-west-1.pooler.supabase.com:5432/postgres
+
+pip install psycopg2-binary
+pip install dj-database-url
+pip install python-dotenv psycopg2
+pip install python-dotenv
+
+host:- db.civhkqvhozkqtuglydsn.supabasepatel@PJKSS#dehri$bihar%2026.co
+port:- 5432
+database :- postgres
+user:- postgres

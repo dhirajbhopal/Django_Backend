@@ -11,61 +11,33 @@ from django.core.mail import send_mail, BadHeaderError
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns # new
 from django.views.static import serve #new
 from django.urls import path, include, re_path #new
+from core.views import Signup, PasswordResetAPIView, PasswordResetConfirmAPIView, ChangePasswordAPIView, HomeApi
+from core import views
+
+
+
 
 
 urlpatterns = [
     #path('__debug__/', include('debug_toolbar.urls')),
-    path('pateladmin', admin.site.urls),
     path('', include('django.contrib.auth.urls')),
-    path('', include(core_urls)),
-
-    # Login and Logout
-    path('login', auth_views.LoginView.as_view(redirect_authenticated_user=True, template_name='commons/login.html'), name='login'),
-    path('logout', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
-   
-    # Main Page 
-    #path('', TemplateView.as_view(template_name='base.html'), name='home'),
-
-    # Change Password
-    path('change-password',auth_views.PasswordChangeView.as_view(template_name='commons/change-password.html',success_url = '/'),
-        name='change_password'),
-
-    # Password Rest link Mail Genartaor
-
-    path('password-reset/', auth_views.PasswordResetView.as_view(
-            template_name='commons/password-reset/password_reset_form.html',
-            email_template_name='commons/password-reset/password_reset_email.html',
-            subject_template_name='commons/password-reset/password_reset_subject.txt',
-            success_url='/password-reset/done/'
-        ), name='password_reset'),
-
-    path('password-reset/done/', auth_views.PasswordResetDoneView.as_view(
-            template_name='commons/password-reset/password_reset_done.html'
-        ), name='password_reset_done'),
-
-    # link in email -> user clicks, sets new password
-    path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(
-            template_name='commons/password-reset/password_reset_confirm.html',
-            success_url='/reset/done/'
-        ), name='password_reset_confirm'),
-
-    path('reset/done/', auth_views.PasswordResetCompleteView.as_view(
-            template_name='commons/password-reset/password_reset_complete.html'
-        ), name='password_reset_complete'),
-
-        # Course view
-    path('vision', TemplateView.as_view(template_name='site/vision.html'), name='vision'),
-
-     # Contact
-    path('contact', TemplateView.as_view(template_name='site/contactus.html'), name='contact'),
-
-    # about view
-    path('about', TemplateView.as_view(template_name='site/about.html'), name='about'),
-
-    # donnation view
-    path('donation', TemplateView.as_view(template_name='site/donation.html'), name='donation'),
-
-    path('checkmail/', TemplateView.as_view(template_name='site/mail.html'), name='checkmail'),
+    path('api/login/', views.login_api),
+    path('HomeApi/',HomeApi.as_view(),),
+    path('', include('core.urls')),
+    path('donationdetail/',views.donationdetail,name='donationdetail'),
+    path('imageupload/',views.imageupload,name='imageupload'),
+    path('api/password-reset/', views.PasswordResetAPIView.as_view(), name='password_reset'),
+    path('api/reset-password/', views.PasswordResetConfirmAPIView.as_view(), name='reset-password'),
+    path('api/change-password/',views.ChangePasswordAPIView.as_view(),),
+    path('signup/',Signup.as_view(),name='Signup'),
+    path("sendotp_api/",views.sendotp_api,name="sendotp_api"),
+    path("update_profile_api/",views.update_profile_api),
+    path("profile_api/", views.profile_api),
+    path("donation_list_api/", views.donation_list_api),
+    path("generate_unique_code_api/", views.generate_unique_code_api),
+    path("search_serial_api/", views.search_serial_api),
+    path("update_serial_api/", views.update_serial_api),
+    path("serial_list_api/", views.serial_list_api),
     re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
     re_path(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
 ]

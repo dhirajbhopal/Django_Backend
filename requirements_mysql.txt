@@ -1,2 +1,35 @@
 mysqlclient
 PyMySQL
+
+
+COMMAND
+SHOW DATABASES;
+USE "database name"
+
+add data in table///// not add data in core_user  table
+
+INSERT INTO core_user (username, email, password, first name)
+VALUES ('patelraunak37@gmail.com', 'patelraunak37@gmail.com', 'member@123');
+
+Member
+
+patelraunak37@gmail.com
+zprateeksingh15678@gmail.com
+mirocalgamerz2024@gmail.com
+krishna1992ssm@gmail.com   Krishna	Patel
+
+RAUNAK	PATEL
+Prateek	Patel
+Krish	Patel
+Krishna	Patel
+
+
+delet data in table/////
+
+DELETE FROM core_user
+WHERE id = 11;
+
+
+show data in table////
+
+SELECT * FROM core_user LIMIT 10;

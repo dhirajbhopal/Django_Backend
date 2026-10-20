@@ -6,11 +6,9 @@ from django.contrib.auth.models import AbstractUser, AbstractBaseUser
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
-#from import_export import resources
 
 
 # Create your models here.
-
 
 def filepathadmin(req,filename):
     old_filename = filename
@@ -49,7 +47,7 @@ class CustomUserManager(BaseUserManager):
 class User(AbstractUser):
     username = models.CharField(max_length=50, unique=True, blank=False ,null=False)
     email = models.EmailField(unique=True,null=False)
-    image=models.ImageField(upload_to=filepathadmin,null=True,blank=True,default='staticfiles/images/PATEL_LOGO.png')
+    #image=models.ImageField(upload_to=filepathadmin,null=True,blank=True,default='staticfiles/images/PATEL_LOGO.png')
     mobileno=models.CharField(max_length=15,null=True,blank=True)
     gender=models.CharField(max_length=15,null=True,blank=True)
     role=models.CharField(max_length=30,null=True,blank=True)
@@ -57,6 +55,13 @@ class User(AbstractUser):
     objects = CustomUserManager()
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]
+    image = models.ImageField(
+        upload_to='uploads/',
+        blank=True,
+        null=True,
+        default='staticfiles/images/PATEL_LOGO.png'
+    )
+
 
     def __str__(self):
         return self.username
@@ -64,10 +69,10 @@ class User(AbstractUser):
 
 
 class UniqueCode(models.Model): #serianno code for letterpad
-    code=models.CharField(max_length=20,unique=True)
-    issuername=models.CharField(max_length=50,blank=True,null=True)
+    code=models.CharField(max_length=25,unique=True)
+    issuername=models.CharField(max_length=50)
     issuedto=models.CharField(max_length=80,blank=True,null=True)
-    subject=models.CharField(max_length=30,blank=True,null=True)
+    subject=models.CharField(max_length=100,blank=True,null=True)
     issuedate=models.DateField(blank=True, null=True)
 
     def __str__(self):
