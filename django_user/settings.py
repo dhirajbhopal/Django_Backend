@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 import pymysql
 import certifi
-import ssl 
+import ssl
 import requests
 
 
@@ -14,28 +14,43 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY
 SECRET_KEY = '&#2uf8lms6l!ow)om51gr)70h4*#f$w=!)labd!t36(ua4z6hh'
-DEBUG = True  # Turn off debug in production
+DEBUG = False  # Turn off debug in production
+
+APPEND_SLASH = True
+SESSION_SAVE_EVERY_REQUEST = True
 
 # Add your API subdomain here if you are using one (e.g., 'api.pjkss.com')
-#ALLOWED_HOSTS = ['pjkss.com', 'www.pjkss.com', '127.0.0.1']
-ALLOWED_HOSTS = ['*']
+#ALLOWED_HOSTS = ['pjkss.com', 'www.pjkss.com', '127.0.0.1' , 'http://127.0.0.1:3000', 'pjkss.pythonanywhere.com']
+ALLOWED_HOSTS = ['pjkss.pythonanywhere.com']
 
 # CSRF and session cookies
+SESSION_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SECURE = True
+
+CSRF_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SECURE = True
+
+
 CORS_ALLOW_CREDENTIALS = True
 
 # Allow your React origin (including www variant for production)
 CORS_ALLOWED_ORIGINS = [
     "https://pjkss.com",
+    "https://pjkss.pythonanywhere.com",
     "https://www.pjkss.com",
     "http://127.0.0.1:3000",
-    "http://127.0.0.1:8000"
+    "http://127.0.0.1:8000",
+    "http://localhost:3000"
+
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     "https://pjkss.com",
+    "https://pjkss.pythonanywhere.com",
     "https://www.pjkss.com",
     "http://127.0.0.1:3000",
-    "http://127.0.0.1:8000"
+    "http://127.0.0.1:8000",
+    "http://localhost:3000"
 ]
 
 SESSION_COOKIE_SAMESITE = "Lax"
@@ -54,7 +69,14 @@ INSTALLED_APPS = [
     'rest_framework',
     'core',
     'django_user',
+    'rest_framework.authtoken',
 ]
+
+REST_FRAMEWORK = {
+       'DEFAULT_AUTHENTICATION_CLASSES': [
+           'rest_framework.authentication.TokenAuthentication',
+       ],
+   }
 
 # MIDDLEWARE
 MIDDLEWARE = [
@@ -97,8 +119,8 @@ WSGI_APPLICATION = 'django_user.wsgi.application'
 """DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'pjkss_db',
-        'USER': 'pjkssdhiraj',
+        'NAME': 'pjkssco1_pjkss_db',
+        'USER': 'pjkssco1_pjkssdhiraj',
         'PASSWORD': 'patel@PJKSS#dehri$bihar%2026',
         'HOST': 'localhost',  # Connected locally inside cPanel
         'PORT': '3306',
@@ -109,14 +131,17 @@ WSGI_APPLICATION = 'django_user.wsgi.application'
 }"""
 
 
+# MySQL Database Configuration for pythonanywhere
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'pjkss$pjkss_db',
+        'USER': 'pjkss',
+        'PASSWORD': 'patel@PJKSS#dehri$bihar%2026',
+        'HOST': 'pjkss.mysql.pythonanywhere-services.com',
+        'PORT': '3306',
     }
 }
-
-
 
 
 # Password validation
@@ -151,7 +176,7 @@ MEDIA_ROOT = BASE_DIR / "media"
 #new----------------------
 
 # Page to go after successfull login
-LOGIN_REDIRECT_URL = 'home'
+LOGIN_REDIRECT_URL = 'admin'
 
 AUTH_USER_MODEL = "core.User"
 

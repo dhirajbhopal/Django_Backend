@@ -6,6 +6,10 @@ COMMAND
 SHOW DATABASES;
 USE "database name"
 
+Modift the table
+DESCRIBE core_uniquecode;
+ALTER TABLE core_uniquecode MODIFY COLUMN subject  VARCHAR(300);
+
 add data in table///// not add data in core_user  table
 
 INSERT INTO core_user (username, email, password, first name)
